@@ -7,43 +7,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $xok = 401;
 
     // Get user input
-    $imei_no = mysqli_real_escape_string($conn, $_POST['imei_no']);
-    $device_name = mysqli_real_escape_string($conn, $_POST['device_name']);
+    $email = mysqli_real_escape_string($conn, $_POST['email']);
+    $password = mysqli_real_escape_string($conn, $_POST['password']);
 
-    // Check if the input values are not empty
-    if (!empty($imei_no) && !empty($device_name)) {
-        // Prepare and execute the SQL query
-        $stmt = mysqli_prepare($conn, "SELECT * FROM tb_device WHERE imei_no = ? AND device_name = ?");
-        mysqli_stmt_bind_param($stmt, "ss", $imei_no, $device_name);
-        mysqli_stmt_execute($stmt);
-        $result = mysqli_stmt_get_result($stmt);
+    // ตรวจสอบว่ามีค่า email และ password ที่ถูกส่งมาหรือไม่
+    $stmt = mysqli_prepare($conn, "SELECT * FROM register WHERE email = ? AND password = ?");
+    mysqli_stmt_bind_param($stmt, "ss", $email, $password);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
 
-        // Check if the query was successful
-        if ($result) {
-            $output = array();
+    // Check if the query was successful
+    if ($result) {
+        $output = array();
 
-            // Fetch results
-            while ($row = mysqli_fetch_assoc($result)) {
-                $output[] = $row;
-                $xok = 200;
-            }
-
-            // Send response code and JSON data
-            http_response_code($xok);
-            echo json_encode($output);
-        } else {
-            // Send error response code
-            http_response_code(500);
-            echo json_encode(array("message" => "Internal Server Error"));
+        // Fetch results
+        while ($row = mysqli_fetch_assoc($result)) {
+            $output[] = $row;
+            $xok = 200;
         }
 
-        // Close prepared statement
-        mysqli_stmt_close($stmt);
+        // Send response code and JSON data
+        http_response_code($xok);
+        echo json_encode($output);
     } else {
-        // Send validation error response code
-        http_response_code(422); // Unprocessable Entity
-        echo json_encode(array("message" => "Invalid input values"));
+        // Send error response code
+        http_response_code(500);
+        echo json_encode(array("message" => "Internal Server Error"));
     }
+
+    // Close prepared statement
+    mysqli_stmt_close($stmt);
 
     // Close database connection
     mysqli_close($conn);
